@@ -6,7 +6,7 @@ David Zuluaga Henao · Lucas Arango Botero · Nicolás Zapata Jurado
 El robot XRP sigue una línea, estima su posición (x, y, θ) fusionando **encoders**, **giroscopio** y un **LiDAR 360°** con un **filtro de Kalman extendido**, y guarda el recorrido en `datos.txt`.
 
 ▶ **Video del robot en la pista:** https://youtube.com/shorts/agATlmuYTp4?feature=share
-🌐 **Sitio con simulador:** _(se agrega al desplegar en Vercel)_
+🌐 **Sitio con simulador:** https://reto1-xrp-mapeo-trayectoria.vercel.app
 
 [![Video del robot XRP](https://i.ytimg.com/vi/agATlmuYTp4/hqdefault.jpg)](https://youtube.com/shorts/agATlmuYTp4?feature=share)
 

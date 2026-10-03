@@ -33,6 +33,7 @@
 }
 * { box-sizing: border-box; }
 html { scroll-behavior: smooth; }
+html, body { overflow-x: clip; }
 body {
   margin: 0;
   background:
@@ -257,6 +258,10 @@ h1 { font-size: clamp(30px, 4.6vw, 54px); line-height: 1.12; margin: 0 0 18px; f
 
 /* --- responsive --- */
 @media (max-width: 1080px) {
+  .hero-bg { background:
+    linear-gradient(90deg, rgba(9,11,22,.95) 0%, rgba(9,11,22,.82) 55%, rgba(9,11,22,.45) 100%),
+    linear-gradient(0deg, var(--bg) 0%, rgba(9,11,22,0) 22%),
+    url(../assets/hero.webp) 70% 55% / cover no-repeat; }
   .sim-wrap, .res-wrap { grid-template-columns: 1fr; }
   .cards { grid-template-columns: 1fr 1fr; }
   .tiles { grid-template-columns: repeat(3, 1fr); }
