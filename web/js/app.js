@@ -16,7 +16,7 @@
     P(2, 1, 12, 3, '#121214'); P(2, 12, 12, 3, '#121214');   // ruedas
     P(3, 4, 10, 8, '#2c2f37'); P(3, 4, 10, 1, '#454955');    // chasis
     P(7, 5, 5, 4, '#c8323c'); P(10, 7, 1, 1, '#4dff7a');      // placa + LED
-    P(4, 6, 3, 3, '#0e0e10'); P(5, 7, 1, 1, '#59ff8e');       // LiDAR
+    P(4, 6, 3, 3, '#0e0e10'); P(5, 7, 1, 1, '#7CFF6B');       // LiDAR
     P(13, 6, 2, 4, '#0f6b3f'); P(14, 7, 1, 1, '#ff4d4d'); P(14, 8, 1, 1, '#ff4d4d');
   })();
 
@@ -85,8 +85,8 @@
   const [cb, cbg] = (() => { const c = document.createElement('canvas'); c.width = 280; c.height = 50; return [c, c.getContext('2d')]; })();
   function grafica() {
     const w = cb.width, h = cb.height, g = cbg;
-    g.fillStyle = '#10141e'; g.fillRect(0, 0, w, h);
-    g.fillStyle = '#1d2433';
+    g.fillStyle = '#0d1022'; g.fillRect(0, 0, w, h);
+    g.fillStyle = '#1c2242';
     for (let y = 0; y < h; y += 10) g.fillRect(0, y, w, 1);
     const n = errHist.length;
     const maxE = Math.max(10, ...errHist.map(e => Math.max(e[1], e[2])));
@@ -100,10 +100,10 @@
         prev = [x, y];
       }
     };
-    dib(2, '#ffb547'); dib(1, '#35e0cf');
+    dib(2, '#FF3CAC'); dib(1, '#00E5FF');
     cg.imageSmoothingEnabled = false;
     cg.drawImage(cb, 0, 0, ch.width, ch.height);
-    cg.fillStyle = '#7a8499'; cg.font = '12px JetBrains Mono, monospace';
+    cg.fillStyle = '#7f86b3'; cg.font = '12px JetBrains Mono, monospace';
     cg.fillText(maxE.toFixed(0) + ' cm', 8, 16);
     cg.fillText(tMax.toFixed(0) + ' s', ch.width - 48, ch.height - 8);
   }
@@ -116,7 +116,7 @@
     tUI = now;
     const E = sim.est, K = sim.ctl;
     const eb = $('#hud-estado');
-    eb.textContent = sim.estado === 'GRABANDO' ? 'GRABANDO' : sim.estado === 'FIN' ? 'META · FIN' : 'ESPERANDO SALIDA';
+    eb.innerHTML = sim.estado === 'GRABANDO' ? 'GRABANDO <span class="ko">기록 중</span>' : sim.estado === 'FIN' ? 'META · FIN <span class="ko">완료</span>' : 'ESPERANDO SALIDA <span class="ko">대기</span>';
     eb.className = 'badge ' + (sim.estado === 'GRABANDO' ? 'run' : sim.estado === 'FIN' ? 'end' : 'wait');
     $('#hud-seg').textContent = sim.estado === 'GRABANDO' ? sim.seg.estado.replace('_', ' ') : '—';
     const tr = sim.tInicio !== undefined ? sim.t - sim.tInicio : 0;
@@ -154,7 +154,7 @@
     grafica();
     if (sim.fin && $('#fin-card').hidden) {
       const f = sim.fin;
-      $('#fin-card').innerHTML = `<h4>✔ Vuelta completa</h4><table>
+      $('#fin-card').innerHTML = `<h4>✔ Vuelta completa <span class="ko">완료</span></h4><table>
         <tr><td>tiempo</td><td>${fmt(f.t, 1)} s</td></tr>
         <tr><td>distancia (encoders)</td><td>${fmt(f.dist, 0)} cm</td></tr>
         <tr><td>error final EKF</td><td>${fmt(f.errEkf, 1)} cm</td></tr>
@@ -231,17 +231,17 @@
         RD.linea(g, a[0], a[1], b[0], b[1], col, 0);
       }
     };
-    if (capa === 'raw' || capa === 'both') pts(D.raw, '#35e0cf', idx);
-    if (capa === 'fixed' || capa === 'both') pts(D.fixed, '#ffb547', idx);
+    if (capa === 'raw' || capa === 'both') pts(D.raw, '#00E5FF', idx);
+    if (capa === 'fixed' || capa === 'both') pts(D.fixed, '#FF3CAC', idx);
     if (capa === 'both') {
       const a = RD.toB(D.raw[idx][0], D.raw[idx][1]), b = RD.toB(D.fixed[idx][0], D.fixed[idx][1]);
-      RD.linea(g, a[0], a[1], b[0], b[1], 'rgba(255,95,109,.9)', 2);
+      RD.linea(g, a[0], a[1], b[0], b[1], 'rgba(255,230,109,.9)', 2);
     }
-    if (capa !== 'fixed') marcador(g, D.raw, idx, '#35e0cf');
-    if (capa !== 'raw') marcador(g, D.fixed, idx, '#ffb547');
+    if (capa !== 'fixed') marcador(g, D.raw, idx, '#00E5FF');
+    if (capa !== 'raw') marcador(g, D.fixed, idx, '#FF3CAC');
     // origen
     const [OX, OY] = RD.toB(D.start[0], D.start[1]);
-    g.fillStyle = '#59ff8e'; g.fillRect(Math.round(OX) - 2, Math.round(OY) - 2, 5, 5);
+    g.fillStyle = '#7CFF6B'; g.fillRect(Math.round(OX) - 2, Math.round(OY) - 2, 5, 5);
     rg.imageSmoothingEnabled = false;
     rg.drawImage(rbuf, 0, 0, rc.width, rc.height);
     scrub.value = idx;

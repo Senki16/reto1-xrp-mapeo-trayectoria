@@ -6,7 +6,7 @@ David Zuluaga Henao · Lucas Arango Botero · Nicolás Zapata Jurado
 El robot XRP sigue una línea, estima su posición (x, y, θ) fusionando **encoders**, **giroscopio** y un **LiDAR 360°** con un **filtro de Kalman extendido**, y guarda el recorrido en `datos.txt`.
 
 ▶ **Video del robot en la pista:** https://youtube.com/shorts/agATlmuYTp4?feature=share
-🌐 **Sitio con simulador:** _(enlace de Vercel)_
+🌐 **Sitio con simulador:** _(se agrega al desplegar en Vercel)_
 
 [![Video del robot XRP](https://i.ytimg.com/vi/agATlmuYTp4/hqdefault.jpg)](https://youtube.com/shorts/agATlmuYTp4?feature=share)
 
@@ -41,7 +41,7 @@ Durante el recorrido el LiDAR trabaja en **modo diferido**: solo guarda barridos
 
 ## Simulador web
 
-`web/` contiene un simulador del mismo código del robot, portado a JavaScript: física de motores, deslizamiento, ruido de encoders/giroscopio/reflectancia, LiDAR por trazado de rayos, PL-ICP y EKF. Render pixel art con animación procedural (ruedas, LiDAR, LED de estado, cables, inclinación por aceleración, polvo).
+`web/` contiene un simulador del mismo código del robot, portado a JavaScript: física de motores, deslizamiento, ruido de encoders/giroscopio/reflectancia, LiDAR por trazado de rayos, PL-ICP y EKF. Render pixel art con animación procedural (ruedas, LiDAR, LED de estado, cables, inclinación por aceleración, polvo). Estética cyberpunk con la paleta *Neon Seoul* y detalles en hangul; la ilustración de portada se generó con ChatGPT y las fuentes (Silkscreen, Inter, JetBrains Mono, Galmuri) son OFL y están incluidas en `web/assets/fonts`.
 
 Para verlo localmente:
 

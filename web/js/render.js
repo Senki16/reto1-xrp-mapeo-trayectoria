@@ -12,12 +12,12 @@
   const W = (Y1 - Y0) * PPC, H = (X1 - X0) * PPC;
 
   const PAL = {
-    floor: ['#5d6160', '#646867', '#6a6e6d', '#717574', '#575b5a'],
-    banner: '#ebe9e3', bannerSh: '#dcd9d1', bannerHi: '#f5f4ef', bannerEdge: '#c9c6bd',
+    floor: ['#22263a', '#262a40', '#2b3046', '#30354d', '#1d2133'],
+    banner: '#e7e5ee', bannerSh: '#d5d2df', bannerHi: '#f3f2f8', bannerEdge: '#b9b4cb',
     line: '#17171c', tape: '#e2cf96', tapeSh: '#c9b67d',
-    wallTop: '#454b5c', wallFace: '#2c303d', wallHi: '#5a6176',
-    shadow: 'rgba(10,12,20,0.38)',
-    ekf: '#35e0cf', odo: '#ffb547', real: 'rgba(255,255,255,0.55)', lidar: '#59ff8e',
+    wallTop: '#151a33', wallFace: '#0d1022', wallHi: '#FF3CAC',
+    shadow: 'rgba(8,4,20,0.42)',
+    ekf: '#00E5FF', odo: '#FF3CAC', real: 'rgba(255,255,255,0.55)', lidar: '#7CFF6B',
   };
 
   // mundo (cm, y arriba) -> buffer (px)
@@ -38,7 +38,7 @@
     const px = img.data;
     const hex = h => [parseInt(h.slice(1, 3), 16), parseInt(h.slice(3, 5), 16), parseInt(h.slice(5, 7), 16)];
     const floor = PAL.floor.map(hex);
-    const madera = ['#6d4f37', '#765740', '#7f5f46', '#654832', '#5c412d'].map(hex);
+    const madera = ['#11152A', '#141933', '#181d3b', '#0e1124', '#2b3270'].map(hex);
     const set = (i, rgb) => { px[i] = rgb[0]; px[i + 1] = rgb[1]; px[i + 2] = rgb[2]; px[i + 3] = 255; };
     const abierto = entorno.tipo === 'abierto';
     // piso
@@ -52,12 +52,10 @@
         if (big < 0.15) idx = Math.min(4, idx + 1) === 4 ? 0 : idx;
         set(k, floor[idx]);
       } else {
-        // piso de madera en tablas
-        const tabla = Math.floor(j / 14), off = (tabla * 37) % 60;
-        const borde = j % 14 === 0 || (i + off) % 60 === 0;
-        const n = hash(i >> 1, j), veta = hash(tabla, (i + off) >> 4);
-        let idx = borde ? 4 : (n < 0.2 ? 3 : n < 0.7 ? 1 : 2);
-        if (!borde && veta < 0.25) idx = idx === 1 ? 0 : idx;
+        // piso de laboratorio: baldosas oscuras con juntas de neon
+        const borde = i % 40 === 0 || j % 40 === 0;
+        const n = hash(i >> 1, j >> 1), t = hash(i / 40 | 0, j / 40 | 0);
+        let idx = borde ? 4 : (n < 0.18 ? 3 : n < 0.65 ? (t < 0.5 ? 0 : 1) : 2);
         set(k, madera[idx]);
       }
     }
@@ -129,8 +127,12 @@
       g.fillRect(Math.round(a[0]), Math.round(a[1]), Math.round(b[0] - a[0]), t);
       g.fillStyle = PAL.wallHi;
       g.fillRect(Math.round(a[0]), Math.round(a[1]) - 1, Math.round(b[0] - a[0]), 1);
+      g.fillRect(Math.round(a[0]), Math.round(b[1]), Math.round(b[0] - a[0]), 1);
+      g.fillStyle = '#00E5FF';
+      g.fillRect(Math.round(a[0]) - 1, Math.round(a[1]), 1, Math.round(b[1] - a[1]));
+      g.fillRect(Math.round(b[0]), Math.round(a[1]), 1, Math.round(b[1] - a[1]));
       // ladrillo sutil en el borde superior
-      g.fillStyle = 'rgba(255,255,255,0.05)';
+      g.fillStyle = 'rgba(91,95,239,0.12)';
       for (let i = 0; i < W; i += 12) for (let j = 0; j < Math.round(a[1]); j += 6) g.fillRect(i + ((j / 6) % 2) * 6, j, 11, 5);
       // puerta en el muro derecho (pantalla: abajo)
       const p0 = toB(142, 150), p1 = toB(142, 178);
@@ -210,7 +212,7 @@
     g.fillStyle = '#2a2a30';
     for (let dy = -3; dy <= 3; dy++) for (let dx = -3; dx <= 3; dx++) if (dx * dx + dy * dy <= 10) g.fillRect(cx + lx + dx, cy + ly + dy, 1, 1);
     const la = sim.lidarAng;
-    g.fillStyle = '#59ff8e'; g.fillRect(Math.round(cx + lx + Math.cos(la) * 3), Math.round(cy + ly + Math.sin(la) * 3), 1, 1);
+    g.fillStyle = '#7CFF6B'; g.fillRect(Math.round(cx + lx + Math.cos(la) * 3), Math.round(cy + ly + Math.sin(la) * 3), 1, 1);
     g.fillStyle = '#9a9aa3'; g.fillRect(cx + lx, cy + ly, 1, 1);
     // cable que se mueve con la marcha (animacion procedural)
     g.fillStyle = '#e3542c';
@@ -239,6 +241,27 @@
     g.fillStyle = '#3f557d'; g.fillRect(-9, -22, 14, 2);
     g.fillStyle = '#2b1d14'; g.fillRect(-6, -8, 13, 16);
     g.fillStyle = '#3d2a1e'; g.fillRect(-4, -6, 6, 4);
+    g.restore();
+  }
+
+  // letrero vertical "로봇 실험실" (laboratorio de robots) con neon que parpadea
+  let fuenteLista = false;
+  if (document.fonts && document.fonts.load) document.fonts.load('22px Galmuri').then(() => { fuenteLista = true; });
+  function letrero(g, t) {
+    if (!fuenteLista) return;
+    const txt = '로봇실험실';
+    const fl = Math.sin(t * 13) + Math.sin(t * 7.3) > 1.7 ? 0.35 : 1;   // fallas del tubo
+    g.save();
+    g.font = '22px Galmuri'; g.textAlign = 'center'; g.textBaseline = 'top';
+    for (let k = 0; k < txt.length; k++) {
+      const y = 112 + k * 30;
+      g.shadowColor = 'rgba(255,60,172,' + 0.9 * fl + ')'; g.shadowBlur = 10;
+      g.fillStyle = 'rgba(255,120,200,' + fl + ')';
+      g.fillText(txt[k], 46, y);
+    }
+    g.shadowBlur = 0;
+    g.fillStyle = 'rgba(0,229,255,' + 0.7 * fl + ')';
+    g.fillRect(30, 104, 32, 1); g.fillRect(30, 112 + txt.length * 30, 32, 1);
     g.restore();
   }
 
@@ -297,6 +320,8 @@
         if (this.vis.ekf && this.vis.odo && this.vis.real) g.drawImage(this.trailC, 0, 0);
         else this._trailsFiltradas(sim);
       }
+      // letrero de neon en hangul (parpadeo procedural)
+      letrero(g, tAnim);
       // persona
       dibujarPersona(g, sim);
       // LiDAR: rayos del ultimo barrido
@@ -310,13 +335,13 @@
           if (!d || d < 120 || d > 6000) continue;
           const a = sp[2] + i * Math.PI / 180, dc = d / 10;
           const [HX, HY] = toB(sp[0] + dc * Math.cos(a), sp[1] + dc * Math.sin(a));
-          linea(g, SX, SY, HX, HY, 'rgba(89,255,142,0.30)', 2);
+          linea(g, SX, SY, HX, HY, 'rgba(124,255,107,0.30)', 2);
           g.fillStyle = PAL.lidar; g.fillRect(Math.round(HX) - 1, Math.round(HY) - 1, 2, 2);
         }
         // barrido giratorio
         const la = sim.lidarAng;
         const [EX, EY] = toB(x + 60 * Math.cos(th + la), y + 60 * Math.sin(th + la));
-        linea(g, RX, RY, EX, EY, 'rgba(160,255,190,0.45)', 2);
+        linea(g, RX, RY, EX, EY, 'rgba(190,255,180,0.5)', 2);
       }
       // polvo procedural cuando una rueda empuja fuerte
       const emit = Math.abs(sim.motorL.v - sim.motorR.v) > 5 && sim.estado === 'GRABANDO';
