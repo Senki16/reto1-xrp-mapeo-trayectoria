@@ -196,7 +196,7 @@
   const [rbuf, rbg] = (() => { const c = document.createElement('canvas'); c.width = RD.W; c.height = RD.H; const g = c.getContext('2d'); g.imageSmoothingEnabled = false; return [c, g]; })();
   const fondoReal = RD.pistaEstatica(D, { tipo: 'abierto', objetos: [
     { tipo: 'caja', x: 118, y: 120, w: 20, h: 15 }, { tipo: 'zapato', x: -26, y: 70, w: 7, h: 11 }, { tipo: 'zapato', x: -26, y: 92, w: 7, h: 11 }] });
-  let capa = 'raw', idx = D.raw.length - 1, replay = false, tRep = 0;
+  let capa = 'both', idx = D.raw.length - 1, replay = false, tRep = 0;
   $$('[data-layer]').forEach(b => b.addEventListener('click', () => {
     capa = b.dataset.layer; $$('[data-layer]').forEach(x => x.classList.toggle('on', x === b)); dibujarReal();
   }));
