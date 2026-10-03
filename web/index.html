@@ -1,0 +1,287 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Reto 1 · Robot XRP — Mapeo de trayectoria</title>
+  <meta name="description" content="Simulador pixel art del robot XRP: seguidor de línea, odometría con encoders e IMU, LiDAR con PL-ICP y filtro de Kalman extendido. Actuadores y Sensores, Universidad EAFIT 2026-2.">
+  <meta property="og:title" content="Reto 1 · Robot XRP — Mapeo de trayectoria">
+  <meta property="og:description" content="Simulador del código del robot XRP sobre la pista real: EKF con encoders, IMU y LiDAR.">
+  <meta property="og:image" content="assets/og.png">
+  <link rel="icon" href="assets/favicon.png">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <header class="nav">
+    <a class="brand" href="#top" aria-label="Inicio">
+      <canvas id="logo" width="16" height="16" aria-hidden="true"></canvas>
+      <span>XRP<b>·</b>RETO&nbsp;1</span>
+    </a>
+    <nav>
+      <a href="#simulador">Simulador</a>
+      <a href="#como">Cómo funciona</a>
+      <a href="#resultados">Resultados</a>
+      <a href="#video">Video</a>
+      <a href="#archivos">Archivos</a>
+      <a class="btn-mini" id="gh-link" href="https://github.com/" target="_blank" rel="noopener">GitHub ↗</a>
+    </nav>
+  </header>
+
+  <main id="top">
+    <!-- ================= HERO ================= -->
+    <section class="hero">
+      <div class="hero-text">
+        <p class="kicker">Actuadores y Sensores · Universidad EAFIT · 2026-2</p>
+        <h1>Mapeo de trayectoria con robot <span class="hl">XRP</span></h1>
+        <p class="lead">Un seguidor de línea que estima su posición fusionando <b>encoders</b>, <b>giroscopio</b> y un <b>LiDAR 360°</b> con un filtro de Kalman extendido. Esta página corre el mismo algoritmo del robot sobre la pista real, con física, ruido de sensores y animación procedural.</p>
+        <div class="cta">
+          <a class="btn primary" href="#simulador">▶ Correr simulación</a>
+          <a class="btn" href="https://youtube.com/shorts/agATlmuYTp4?feature=share" target="_blank" rel="noopener">Ver video real ↗</a>
+        </div>
+        <ul class="team">
+          <li>David Zuluaga Henao</li>
+          <li>Lucas Arango Botero</li>
+          <li>Nicolás Zapata Jurado</li>
+        </ul>
+      </div>
+      <div class="hero-stats">
+        <div class="stat"><span class="v">99,4×198,5</span><span class="u">cm de pista</span></div>
+        <div class="stat"><span class="v">811</span><span class="u">cm de línea</span></div>
+        <div class="stat"><span class="v">100 Hz</span><span class="u">control de ruedas</span></div>
+        <div class="stat"><span class="v">10 Hz</span><span class="u">filtro de Kalman</span></div>
+      </div>
+    </section>
+
+    <!-- ================= SIMULADOR ================= -->
+    <section id="simulador" class="section">
+      <div class="sec-head">
+        <h2><span class="num">01</span> Simulador</h2>
+        <p>El código de <code>reto1_xrp.py</code> portado línea a línea: seguidor de línea + PI por rueda a 100 Hz, odometría y EKF a 10 Hz, y PL-ICP con barridos del LiDAR. El robot solo “ve” lo que leerían sus sensores; el mundo agrega ruido, deslizamiento y errores de calibración.</p>
+      </div>
+
+      <div class="sim-wrap">
+       <div class="sim-col">
+        <div class="sim-stage px-box">
+          <canvas id="sim" width="1200" height="760" aria-label="Simulación del robot XRP sobre la pista"></canvas>
+          <div class="stage-hud">
+            <span id="hud-estado" class="badge wait">ESPERANDO SALIDA</span>
+            <span id="hud-seg" class="badge ghost">—</span>
+            <span id="hud-t" class="hud-t">t = 0.0 s</span>
+          </div>
+          <div class="legend">
+            <span><i class="sw sw-real"></i>Real</span>
+            <span><i class="sw sw-ekf"></i>EKF</span>
+            <span><i class="sw sw-odo"></i>Solo odometría</span>
+            <span><i class="sw sw-lidar"></i>LiDAR</span>
+          </div>
+          <div id="fin-card" class="fin-card px-box" hidden></div>
+        </div>
+        <div class="chart-card px-box">
+          <div class="chart-head"><h3>Error de posición respecto al robot real</h3>
+          <div class="chart-legend"><span><i class="sw sw-ekf"></i>EKF <b id="e-ekf">0.0</b> cm</span><span><i class="sw sw-odo"></i>Solo odometría <b id="e-odo">0.0</b> cm</span></div></div>
+          <canvas id="chart" width="1120" height="200" aria-label="Error de posición del EKF y de la odometría"></canvas>
+        </div>
+        <p class="note">En el robot real el LiDAR trabaja en <b>modo diferido</b>: durante el recorrido solo guarda barridos y al llegar a la meta repite el EKF con el ICP. Aquí el cálculo es en vivo; el resultado del filtro es el mismo.</p>
+       </div>
+
+        <aside class="panel">
+          <div class="controls px-box">
+            <div class="row">
+              <button id="b-play" class="btn primary wide">▶ Iniciar</button>
+              <button id="b-reset" class="btn" title="Reiniciar">↺</button>
+              <button id="b-seed" class="btn" title="Nueva semilla de ruido">⚄</button>
+            </div>
+            <div class="row seg" role="group" aria-label="Velocidad">
+              <span class="lbl">Velocidad</span>
+              <button data-speed="1">1×</button><button data-speed="2">2×</button><button data-speed="4" class="on">4×</button><button data-speed="8">8×</button><button data-speed="16">16×</button>
+            </div>
+            <div class="row seg" role="group" aria-label="Entorno">
+              <span class="lbl">Entorno</span>
+              <button data-env="salon" class="on">Salón</button><button data-env="abierto">Abierto</button>
+            </div>
+            <label class="row slider"><span class="lbl">Ruido</span><input id="r-ruido" type="range" min="0" max="3" step="0.25" value="1"><b id="v-ruido">1.0×</b></label>
+            <div class="toggles">
+              <label><input type="checkbox" id="t-lidar" checked> LiDAR en el EKF</label>
+              <label><input type="checkbox" id="t-persona"> Persona caminando</label>
+              <label><input type="checkbox" id="t-rayos" checked> Rayos del LiDAR</label>
+              <label><input type="checkbox" id="t-seguir"> Cámara que sigue</label>
+              <label><input type="checkbox" id="t-odo" checked> Odometría</label>
+              <label><input type="checkbox" id="t-real" checked> Trayectoria real</label>
+            </div>
+          </div>
+
+          <div class="tele px-box">
+            <h3>Telemetría</h3>
+            <div class="grid2">
+              <div><span class="k">v</span><span id="m-v" class="m">0.0</span><span class="unit">cm/s</span></div>
+              <div><span class="k">ω</span><span id="m-w" class="m">0.00</span><span class="unit">rad/s</span></div>
+              <div><span class="k">distancia</span><span id="m-d" class="m">0</span><span class="unit">cm</span></div>
+              <div><span class="k">yaw IMU</span><span id="m-yaw" class="m">0</span><span class="unit">°</span></div>
+            </div>
+            <div class="bars">
+              <div class="bar"><span class="k">Sensor izq.</span><div class="track"><i id="b-izq"></i><em class="th" style="left:77%"></em></div><span id="v-izq" class="m">0.00</span></div>
+              <div class="bar"><span class="k">Sensor der.</span><div class="track"><i id="b-der"></i><em class="th" style="left:77%"></em></div><span id="v-der" class="m">0.00</span></div>
+              <div class="bar"><span class="k">Esfuerzo izq.</span><div class="track"><i id="b-el" class="amber"></i></div><span id="v-el" class="m">0.00</span></div>
+              <div class="bar"><span class="k">Esfuerzo der.</span><div class="track"><i id="b-er" class="amber"></i></div><span id="v-er" class="m">0.00</span></div>
+            </div>
+            <h3>Filtro de Kalman</h3>
+            <div class="grid3">
+              <div><span class="k">x̂</span><span id="m-x" class="m">0.0</span></div>
+              <div><span class="k">ŷ</span><span id="m-y" class="m">0.0</span></div>
+              <div><span class="k">θ̂</span><span id="m-th" class="m">0</span></div>
+              <div><span class="k">σx</span><span id="m-sx" class="m">0.0</span></div>
+              <div><span class="k">σy</span><span id="m-sy" class="m">0.0</span></div>
+              <div><span class="k">σθ</span><span id="m-st" class="m">0.0</span></div>
+            </div>
+            <h3>LiDAR · PL-ICP</h3>
+            <div class="grid3">
+              <div><span class="k">barridos</span><span id="m-scans" class="m">0</span></div>
+              <div><span class="k">aceptados</span><span id="m-acc" class="m">0</span></div>
+              <div><span class="k">rechazados</span><span id="m-rej" class="m">0</span></div>
+              <div><span class="k">pares</span><span id="m-n" class="m">0</span></div>
+              <div><span class="k">RMS</span><span id="m-rms" class="m">0.0</span></div>
+              <div><span class="k">d²</span><span id="m-d2" class="m">0.0</span></div>
+            </div>
+          </div>
+        </aside>
+      </div>
+    </section>
+
+    <!-- ================= COMO FUNCIONA ================= -->
+    <section id="como" class="section">
+      <div class="sec-head">
+        <h2><span class="num">02</span> Cómo funciona</h2>
+        <p>Tres relojes separados para que los cálculos nunca frenen las ruedas.</p>
+      </div>
+      <div class="pipeline">
+        <div class="node px-box"><span class="tag">Sensores</span><p>Reflectancia ×2 · Encoders 585 cuentas/vuelta · Giroscopio z · LiDAR LD06 230 400 bd</p></div>
+        <div class="arrow">→</div>
+        <div class="node px-box hot"><span class="tag">Marcha · 100 Hz</span><p>Seguidor de línea PD + amortiguamiento con el giroscopio. PI de velocidad por rueda con prealimentación.</p></div>
+        <div class="arrow">→</div>
+        <div class="node px-box"><span class="tag">Predicción · 10 Hz</span><p>Δs de los encoders, Δθ del giroscopio. Modelo diferencial con θ en el punto medio.</p></div>
+        <div class="arrow">→</div>
+        <div class="node px-box"><span class="tag">Corrección</span><p>PL-ICP entre barridos (keyframes cada 12 cm / 12°). EKF con H = I y validación χ².</p></div>
+        <div class="arrow">→</div>
+        <div class="node px-box"><span class="tag">datos.txt</span><p>x, y en cm desde la línea transversal.</p></div>
+      </div>
+
+      <div class="cards">
+        <article class="card px-box">
+          <h3>Seguidor de línea</h3>
+          <pre>e = (sL − sR) / max(sL + sR, 1)
+ω* = 0.55·e + Kd·ė − 0.18·ω_giro
+v* = 6.0 − 2.5·|e|   cm/s
+vL,R = v* ∓ ω*·L/2</pre>
+          <p>Si pierde la línea, frena una rueda y avanza la otra hacia el último lado donde la vio.</p>
+        </article>
+        <article class="card px-box">
+          <h3>Odometría</h3>
+          <pre>d = Δticks · 2πr / N   (r = 3.0, N = 585)
+Δs = (dR + dL)/2 ;  Δθ = Δyaw_IMU
+x += Δs·cos(θ + Δθ/2)
+y += Δs·sin(θ + Δθ/2)</pre>
+          <p>El giro sale del giroscopio (XRPLib lo integra a ~200 Hz): las ruedas patinan en las curvas.</p>
+        </article>
+        <article class="card px-box">
+          <h3>LiDAR · PL-ICP</h3>
+          <pre>min Σ [ nⱼᵀ (R(φ)·pᵢ + t − qⱼ) ]²
+Gauss-Newton, 5 iteraciones
+umbral 25 → 5 cm, ≥ 30 pares
+Σ_ICP ≈ σ²(JᵀJ)⁻¹ · 4</pre>
+          <p>Error punto-a-línea (Censi, 2008): no penaliza deslizar a lo largo de una pared.</p>
+        </article>
+        <article class="card px-box">
+          <h3>Filtro de Kalman extendido</h3>
+          <pre>P⁻ = F P Fᵀ + Q(Δs, Δθ)
+z = x_ref ⊕ Δx_LiDAR ,  H = I
+K = P⁻ (P⁻ + R)⁻¹
+P = (I−K)P⁻(I−K)ᵀ + K R Kᵀ</pre>
+          <p>Q crece con lo recorrido; R la entrega el ICP en cada barrido. d² &gt; 11,34 atenúa la medición.</p>
+        </article>
+      </div>
+    </section>
+
+    <!-- ================= RESULTADOS ================= -->
+    <section id="resultados" class="section">
+      <div class="sec-head">
+        <h2><span class="num">03</span> Resultados del recorrido real</h2>
+        <p>Los 1090 puntos que guardó el robot, en la escala real de la pista. A la derecha, los mismos puntos reubicados sobre la línea con emparejamiento con el mapa (post-procesamiento).</p>
+      </div>
+      <div class="res-wrap">
+        <div class="res-stage px-box">
+          <canvas id="real" width="1200" height="760" aria-label="Datos reales del robot sobre la pista"></canvas>
+          <div class="res-controls">
+            <div class="seg" role="group" aria-label="Capa">
+              <button data-layer="raw" class="on">Datos del EKF</button><button data-layer="fixed">Reubicados</button><button data-layer="both">Ambos</button>
+            </div>
+            <button id="b-replay" class="btn">▶ Reproducir</button>
+            <input id="r-scrub" type="range" min="0" max="1089" value="1089" aria-label="Punto">
+            <span id="scrub-info" class="m">punto 1090 · 752 cm · error 57.7 cm</span>
+          </div>
+        </div>
+        <div class="tiles">
+          <div class="tile px-box"><span class="v">1090</span><span class="u">puntos registrados</span></div>
+          <div class="tile px-box"><span class="v">752 cm</span><span class="u">distancia medida</span></div>
+          <div class="tile px-box"><span class="v">4,5 cm</span><span class="u">error medio en los primeros 170 cm</span></div>
+          <div class="tile px-box warn"><span class="v">57,7 cm</span><span class="u">error de cierre (7,7 %)</span></div>
+          <div class="tile px-box"><span class="v">−360°</span><span class="u">giro total medido</span></div>
+          <div class="tile px-box"><span class="v">5</span><span class="u">correcciones LiDAR &gt; 4 cm</span></div>
+        </div>
+      </div>
+      <p class="note">¿Por qué los puntos no coincidían con el dibujo de la pista? El plano en imagen <b>no está a escala</b> (relación 1,58) y la pista real mide 99,4 × 198,5 cm (relación 2,0). Con la escala correcta en cada eje, la salida ubicada a 54 cm de la esquina inferior izquierda y el giro de 90° del marco del robot, el recorrido coincide los primeros 170 cm; después se abre por errores de rumbo en las curvas.</p>
+    </section>
+
+    <!-- ================= VIDEO ================= -->
+    <section id="video" class="section">
+      <div class="sec-head">
+        <h2><span class="num">04</span> El robot en la pista</h2>
+        <p>Video del recorrido real del XRP.</p>
+      </div>
+      <div class="video-wrap">
+        <div class="video px-box">
+          <button class="yt" id="yt" data-id="agATlmuYTp4" aria-label="Reproducir el video del robot XRP">
+            <img src="https://i.ytimg.com/vi/agATlmuYTp4/hqdefault.jpg" alt="Vista previa del video del robot XRP en la pista" loading="lazy">
+            <span class="yt-play" aria-hidden="true"></span>
+            <span class="yt-label">▶ Reproducir aquí</span>
+          </button>
+        </div>
+        <div class="video-side">
+          <h3>Lo que hace el código en cada tramo</h3>
+          <ul>
+            <li><b>Salida:</b> espera los dos sensores sobre la transversal (LED amarillo), define (0, 0, 0) y arranca (LED verde).</li>
+            <li><b>Rectas y curvas:</b> 6,0 cm/s en recta y baja hasta 3,5 cm/s cuando el error de línea crece.</li>
+            <li><b>Esquinas cerradas:</b> si pierde la línea, frena una rueda y gira hacia el último lado donde la vio.</li>
+            <li><b>Meta:</b> se detiene, procesa los barridos del LiDAR (LED azul) y guarda <code>datos.txt</code>.</li>
+          </ul>
+          <a class="btn" href="https://youtube.com/shorts/agATlmuYTp4?feature=share" target="_blank" rel="noopener">Abrir en YouTube ↗</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= ARCHIVOS ================= -->
+    <section id="archivos" class="section">
+      <div class="sec-head">
+        <h2><span class="num">05</span> Archivos</h2>
+        <p>Todo el material del reto.</p>
+      </div>
+      <div class="files">
+        <a class="file px-box" href="files/Informe_Reto1_Actuadores_y_Sensores.docx" download><span class="ext">DOCX</span><span><b>Informe</b><small>Modelo, Q y R, resultados</small></span></a>
+        <a class="file px-box" href="files/reto1_xrp.py" download><span class="ext">PY</span><span><b>reto1_xrp.py</b><small>Programa de la XRP</small></span></a>
+        <a class="file px-box" href="files/datos.txt" download><span class="ext">TXT</span><span><b>datos.txt</b><small>Trayectoria del EKF</small></span></a>
+        <a class="file px-box" href="files/datos_reubicados_pista.csv" download><span class="ext">CSV</span><span><b>Datos reubicados</b><small>EKF vs. pista, con error</small></span></a>
+        <a class="file px-box" id="gh-file" href="https://github.com/" target="_blank" rel="noopener"><span class="ext">GIT</span><span><b>Repositorio</b><small>Código, análisis y sitio</small></span></a>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <p><b>Reto 1 · Mapeo de trayectoria con robot XRP</b> — Actuadores y Sensores, Universidad EAFIT, 2026-2. Profesor: Felipe Mendoza Giraldo.</p>
+    <p>David Zuluaga Henao · Lucas Arango Botero · Nicolás Zapata Jurado</p>
+  </footer>
+
+  <script src="js/data.js"></script>
+  <script src="js/sim.js"></script>
+  <script src="js/render.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
